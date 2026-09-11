@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -12,10 +14,12 @@ public class ASCII
     static final String CYAN = "\u001B[36m";
     static final String WHITE = "\u001B[0m";
     static Scanner sc = new Scanner(System.in);
-    static Map<Character, String[]> letters = new LinkedHashMap<>();
     static Map<String, String> colors = new LinkedHashMap<>();
+    static Map<Character, String[]> letters = new LinkedHashMap<>();
+    static Map<String, String[]> emojis = new LinkedHashMap<>();
 
-    static {
+    static
+    {
         colors.put("RED", RED);
         colors.put("GREEN", GREEN);
         colors.put("BLUE", BLUE);
@@ -24,16 +28,16 @@ public class ASCII
         colors.put("WHITE", WHITE);
         colors.put("CYAN", CYAN);
 
-        letters.put('A', new String[]{"  █  ", " █ █ ", "█████", "█   █", "█   █"});
-        letters.put('B', new String[]{"████ ", "█   █", "████ ", "█   █", "████ "});
-        letters.put('C', new String[]{" ████", "█    ", "█    ", "█    ", " ████"});
+        letters.put('A', new String[]{" ███ ", " █ █ ", "█████", "█   █", "█   █"});
+        letters.put('B', new String[]{" ███ ", "█   █", "████ ", "█   █", " ███ "});
+        letters.put('C', new String[]{"█████", "█    ", "█    ", "█    ", "█████"});
         letters.put('D', new String[]{"████ ", "█   █", "█   █", "█   █", "████ "});
-        letters.put('E', new String[]{"█████", "█    ", "███  ", "█    ", "█████"});
-        letters.put('F', new String[]{"█████", "█    ", "███  ", "█    ", "█    "});
+        letters.put('E', new String[]{"█████", "█    ", "████ ", "█    ", "█████"});
+        letters.put('F', new String[]{"█████", "█    ", "████ ", "█    ", "█    "});
         letters.put('G', new String[]{" ████", "█    ", "█ ███", "█   █", " ████"});
         letters.put('H', new String[]{"█   █", "█   █", "█████", "█   █", "█   █"});
         letters.put('I', new String[]{"█████", "  █  ", "  █  ", "  █  ", "█████"});
-        letters.put('J', new String[]{"█████", "  █  ", "  █  ", "█ █  ", " █   "});
+        letters.put('J', new String[]{"█████", "  █  ", "  █  ", "  █  ", "███  "});
         letters.put('K', new String[]{"█   █", "█  █ ", "███  ", "█  █ ", "█   █"});
         letters.put('L', new String[]{"█    ", "█    ", "█    ", "█    ", "█████"});
         letters.put('M', new String[]{"█   █", "██ ██", "█ █ █", "█   █", "█   █"});
@@ -87,21 +91,53 @@ public class ASCII
         letters.put('\\', new String[]{"█    ", " █   ", "  █  ", "   █ ", "    █"});
         letters.put('#', new String[]{" █ █ ", "█████", " █ █ ", "█████", " █ █ "});
         letters.put(' ', new String[]{"   ", "   ", "   ", "   ", "   "});
-        // letters.put('', new String[]{"     ", "     ", "     ", "     ", "     "});
+
+        emojis.put("/heart", new String[]{" █ █ ", "█████", "█████", " ███ ", "  █  "});
+        emojis.put("/angry", new String[]{" █ █ ", "██ ██", "     ", "██ ██", " █ █ "});
+        // _.put(' ', new String[]{"   ", "   ", "   ", "   ", "   "});z
     }
 
     public static void print(String text, String color) 
     {
-        text = text.toUpperCase();
-        for (int row = 0; row < 5; row++) {
-            StringBuilder lineResult = new StringBuilder();
-            
-            for (int i = 0; i < text.length(); i++) {
-                char c = text.charAt(i);
-                
-                if (letters.containsKey(c)) {
-                    lineResult.append(letters.get(c)[row]).append(!(c==',' || c=='.') ? " " : ""); 
+        List<String[]> glyphs = new ArrayList<>();
+        int i = 0;
+
+        while(i < text.length()) 
+        {
+            if(text.charAt(i) == '/') 
+            {
+                String matchedEmoji = null;
+                for(String emojiKey : emojis.keySet()) 
+                {
+                    if(text.regionMatches(true, i, emojiKey, 0, emojiKey.length())) 
+                    {
+                        matchedEmoji = emojiKey;
+                        break;
+                    }
                 }
+
+                if(matchedEmoji != null) 
+                {
+                    glyphs.add(emojis.get(matchedEmoji));
+                    i += matchedEmoji.length();
+                    continue;
+                }
+            }
+
+            char c = Character.toUpperCase(text.charAt(i));
+            if(letters.containsKey(c)) 
+            {
+                glyphs.add(letters.get(c));
+            }
+            i++;
+        }
+
+        for(int row = 0; row < 5; row++) 
+        {
+            StringBuilder lineResult = new StringBuilder();
+            for(String[] glyph : glyphs) 
+            {
+                lineResult.append(glyph[row]).append(" ");
             }
             System.out.println(color + lineResult + WHITE);
         }
@@ -110,51 +146,64 @@ public class ASCII
 
     public static void print(String text) 
     {
-        text = text.toUpperCase();
-        for (int row = 0; row < 5; row++) {
-            StringBuilder lineResult = new StringBuilder();
-            
-            for (int i = 0; i < text.length(); i++) {
-                char c = text.charAt(i);
-                
-                if (letters.containsKey(c)) {
-                    lineResult.append(letters.get(c)[row]).append(!(c==',' || c=='.') ? " " : ""); 
-                }
-            }
-            System.out.println(lineResult);
-        }
-        System.out.println();
+        print(text, WHITE);
     }
 
     public static void guide() 
     {
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
+        clear(true);
         System.out.print(GREEN + "-SUPPORTED CHARACTERS: " + WHITE + "\n");
         boolean isFirst = true;
-        for (Character c : letters.keySet()) {
+        for(Character c : letters.keySet())
+        {
             if (c == ' ') continue;
             System.out.print(isFirst ? "" : " ");
             System.out.print(c);
             isFirst = false;
         }
+
+        System.out.print(GREEN + "\n-SUPPORTED EMOJIS: " + WHITE + "\n");
+        isFirst = true;
+        for(String s : emojis.keySet())
+        {
+            if(s.equals(" ")) continue;
+            System.out.print(isFirst ? "" : " ");
+            System.out.print(s);
+            isFirst = false;
+        }
+
         System.out.println(GREEN + "\n-SUPPORTED COLORS: \n" + RED + "RED" + WHITE + ", " + GREEN + "GREEN" + WHITE + ", " + YELLOW + "YELLOW" + WHITE + ", " + BLUE + "BLUE" + WHITE +  ", " + PURPLE + "PURPLE" + WHITE + ", " + CYAN + "CYAN" + WHITE + ", WHITE <defaut>");
 
         System.out.println("\n[ENTER TO CONTINUE]");
         sc.nextLine();
-        menu();
+        clear(false);
     }
 
-    public static void clear()
+    public static void clear(boolean isClean)
     {
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
+        try 
+        {
+            String os = System.getProperty("os.name");
+            if(os.contains("Windows")) 
+            {
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } 
+            else 
+            {
+                new ProcessBuilder("clear").inheritIO().start().waitFor();
+            }
+        } 
+        catch(Exception e) 
+        {
+            System.out.print("\033[H\033[2J\033[3J");
+            System.out.flush();
+        }
+
+        if(!isClean) menu();
     }
 
     public static void menu()
     {
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
         print("PRINT_TEXT", GREEN);
         System.out.println("\nSYNTAX: [TEXT] / [COLOR]");
         System.out.println("\n-GUIDE: /help");
@@ -162,7 +211,8 @@ public class ASCII
         System.out.println("-EXIT:  /exit\n\n");
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         // print("abcdefghijklmnopqrstuvwxyz", RED);
         // print("0123456789", BLUE);
         // print("+-*=.,!?_:;|[](){}<>\'\"`\\#", GREEN);
@@ -176,8 +226,7 @@ public class ASCII
         // print("(\'1\') [\"2\"] {`3`}");
         // print("(()) [[]] {{}} <<>>");
 
-
-        menu();
+        clear(false);
         while(true)
         {
             System.out.print(">>> ");
@@ -191,20 +240,30 @@ public class ASCII
             }
             if(input.equalsIgnoreCase("/clear"))
             { 
-                clear(); 
+                clear(false); 
                 continue; 
             }
             String text = input;
             String color = WHITE;
-            if (input.contains("/")) {
-                int slashIndex = input.indexOf('/');
-                text = input.substring(0, slashIndex).trim();
-                String colorName = input.substring(slashIndex + 1).toUpperCase().replaceAll(" ", "");
-                color = colors.getOrDefault(colorName, WHITE);
+
+            int slashIndex = input.lastIndexOf('/');
+            if (slashIndex != -1) 
+            {
+                String potentialColor = input.substring(slashIndex + 1).trim().toUpperCase();
+                if (colors.containsKey(potentialColor)) 
+                {
+                    color = colors.get(potentialColor);
+                    text = input.substring(0, slashIndex).trim();
+                }
             }
-            if(text.isEmpty()) continue;
-            print(text, color);        
+
+            if (text.isEmpty()) continue;
+            print(text, color);     
         }
+
+        clear(true);
         System.out.println("\n\n>>> THANKS FOR USING <<<\n");
+        sc.nextLine();
+        clear(true);
     }
 }
